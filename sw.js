@@ -1,17 +1,21 @@
-const CACHE_NAME = 'iron-log-v30';
+const CACHE_NAME = 'iron-log-v31';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
-  './storage.js',
-  './chart.js',
-  './timer.js',
   './manifest.json',
-  './fonts/PlusJakartaSans-Variable.woff2',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png',
+  './css/styles.css',
+  './js/utils.js',
+  './js/storage.js',
+  './js/timer.js',
+  './js/chart.js',
+  './js/components.js',
+  './js/timer-ui.js',
+  './js/views.js',
+  './js/app.js',
+  './assets/fonts/PlusJakartaSans-Variable.woff2',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
