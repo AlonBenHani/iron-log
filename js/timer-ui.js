@@ -138,10 +138,15 @@ function mountRestTimerTile(tile) {
     tile.appendChild(clock);
 
     tile.onclick = () => {
-      if (confirm('Cancel this rest timer?')) {
-        RestTimer.cancel();
-        showIdle();
-      }
+      showConfirmModal({
+        title: 'Cancel this rest timer?',
+        confirmLabel: 'Cancel timer',
+        dismissLabel: 'Keep going',
+        onConfirm: () => {
+          RestTimer.cancel();
+          showIdle();
+        },
+      });
     };
 
     function tick() {

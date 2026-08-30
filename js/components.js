@@ -176,6 +176,33 @@ function showModal(contentEl, onClose) {
   return { close };
 }
 
+// A styled yes/no bottom sheet — the in-app stand-in for window.confirm().
+// Dismissing (close button, backdrop tap, or the dismiss button) does nothing;
+// only the confirm button runs onConfirm.
+function showConfirmModal({ title, message, confirmLabel = 'Confirm', dismissLabel = 'Never mind', onConfirm }) {
+  const panel = el(`
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">${escapeHtml(title)}</h2>
+        <button class="modal-close" aria-label="Close">×</button>
+      </div>
+      ${message ? `<div class="modal-body">${escapeHtml(message)}</div>` : ''}
+      <div class="modal-actions">
+        <button class="primary-btn modal-dismiss">${escapeHtml(dismissLabel)}</button>
+        <button class="modal-delete-btn modal-confirm">${escapeHtml(confirmLabel)}</button>
+      </div>
+    </div>
+  `);
+  const { close } = showModal(panel);
+  panel.querySelector('.modal-close').addEventListener('click', close);
+  panel.querySelector('.modal-dismiss').addEventListener('click', close);
+  panel.querySelector('.modal-confirm').addEventListener('click', () => {
+    close();
+    if (onConfirm) onConfirm();
+  });
+  return { close };
+}
+
 function openExerciseInfoModal(exercise, stats) {
   const s = stats.lastSession;
   const panel = el(`
