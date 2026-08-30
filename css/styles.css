@@ -254,7 +254,7 @@ button, input, textarea {
 }
 
 .stat-tile {
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
 }
 
