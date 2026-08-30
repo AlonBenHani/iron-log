@@ -93,7 +93,7 @@ function headerWithBack(title, backHash) {
     <div class="header">
       <div class="header-row">
         <button class="back-btn" aria-label="Back"><span class="back-btn-glyph">‹</span></button>
-        <h1 class="page-title">${title}</h1>
+        <h1 class="page-title">${escapeHtml(title)}</h1>
         <div style="width:38px"></div>
       </div>
     </div>
@@ -107,10 +107,10 @@ function exerciseCard({ exercise, stats, onClick, onDelete }) {
   const badgeCls = hasStats && stats.isStuck ? 'stuck' : hasStats && stats.isPR ? 'pr' : '';
   const card = el(`
     <div class="exercise-card ${badgeCls}" role="button" tabindex="0">
-      <div class="exercise-icon">${iconFor(exercise.name)}</div>
+      <div class="exercise-icon">${escapeHtml(iconFor(exercise.name))}</div>
       <div class="exercise-main">
         <div class="exercise-name-row">
-          <span class="exercise-name">${exercise.name}</span>
+          <span class="exercise-name">${escapeHtml(exercise.name)}</span>
           ${
             hasStats && stats.isStuck
               ? `<span class="exercise-badge stuck">${stats.stuckDays}d stuck</span>`
@@ -137,7 +137,8 @@ function exerciseCard({ exercise, stats, onClick, onDelete }) {
   });
 
   if (onDelete) {
-    const delBtn = el(`<button class="exercise-delete" aria-label="Delete ${exercise.name}">×</button>`);
+    const delBtn = el(`<button class="exercise-delete">×</button>`);
+    delBtn.setAttribute('aria-label', `Delete ${exercise.name}`);
     delBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       onDelete();
@@ -180,7 +181,7 @@ function openExerciseInfoModal(exercise, stats) {
   const panel = el(`
     <div class="modal-panel">
       <div class="modal-header">
-        <h2 class="modal-title">${exercise.name}</h2>
+        <h2 class="modal-title">${escapeHtml(exercise.name)}</h2>
         <button class="modal-close" aria-label="Close">×</button>
       </div>
       <div class="modal-body">

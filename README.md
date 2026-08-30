@@ -4,14 +4,16 @@ A dependency-free PWA for tracking gym progression — log your lifts, watch the
 trend, and get nudged when a lift has been stuck too long. All data lives in the
 browser's `localStorage`; there is no backend and no build step.
 
-## Run locally
+## Run it
 
-```powershell
-./serve.ps1            # serves the folder on http://localhost:8080
-./serve.ps1 -Port 9000
+Live at <https://alonbenhani.github.io/iron-log/> — GitHub Pages, redeploys on
+every push to `master`.
+
+To run locally, serve the repo root with any static file server, e.g.:
+
 ```
-
-Any static file server works too — just serve the repo root.
+python -m http.server 8080
+```
 
 ## Layout
 
@@ -19,7 +21,6 @@ Any static file server works too — just serve the repo root.
 index.html            markup shell + service-worker registration
 manifest.json          PWA manifest (installable, standalone)
 sw.js                  service worker — network-first for code, cache-first for assets
-serve.ps1              zero-dependency static server for local dev
 
 css/styles.css         all styling + the @font-face
 

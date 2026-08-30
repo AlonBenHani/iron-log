@@ -366,7 +366,7 @@ function renderProgressDetail(exerciseId) {
 
   if (!stats) {
     content.appendChild(
-      el(`<div class="empty-state">No sessions logged yet for ${exercise.name}.</div>`)
+      el(`<div class="empty-state">No sessions logged yet for ${escapeHtml(exercise.name)}.</div>`)
     );
     wrap.appendChild(content);
     return wrap;
