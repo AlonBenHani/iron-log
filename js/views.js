@@ -334,7 +334,7 @@ function renderLogEntry(exerciseId) {
   content.appendChild(noteInput);
 
   const saveBtn = el(`<button class="primary-btn" style="margin-top:6px;">Save exercise</button>`);
-  saveBtn.addEventListener('click', () => {
+  function doSave() {
     const sets = [...setsWrap.querySelectorAll('.set-row')].map((row) => ({
       weight: row.querySelector('.w-input').value,
       reps: row.querySelector('.r-input').value,
@@ -342,6 +342,21 @@ function renderLogEntry(exerciseId) {
     const saved = Store.logSession(exerciseId, sets, selectedFeeling, noteInput.value);
     if (saved) navigate('/today');
     else alert('Enter at least one set with weight and reps.');
+  }
+  saveBtn.addEventListener('click', () => {
+    // A session for this exercise already exists for today — logSession would
+    // replace it wholesale, so make the overwrite explicit.
+    if (todaySession) {
+      showConfirmModal({
+        title: 'Already logged today',
+        message: `You already saved ${exercise.name} today. Saving again overwrites that entry.`,
+        confirmLabel: 'Overwrite',
+        dismissLabel: 'Go back',
+        onConfirm: doSave,
+      });
+    } else {
+      doSave();
+    }
   });
   content.appendChild(saveBtn);
 
