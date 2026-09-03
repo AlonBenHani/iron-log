@@ -81,14 +81,6 @@ const Store = {
     return this.data.exercises.find((e) => e.id === id) || null;
   },
 
-  setBodyweight(id, on) {
-    const ex = this.getExercise(id);
-    if (!ex) return;
-    if (on) ex.bodyweight = true;
-    else delete ex.bodyweight;
-    this.save();
-  },
-
   deleteExercise(id) {
     this.data.exercises = this.data.exercises.filter((e) => e.id !== id);
     this.data.sessions = this.data.sessions.filter((s) => s.exerciseId !== id);

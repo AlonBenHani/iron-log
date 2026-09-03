@@ -211,8 +211,8 @@ function renderLogEntry(exerciseId) {
 
   const content = el(`<div class="content"></div>`);
 
+  // Fixed for the life of the exercise — decided from its name when created.
   const bodyweight = !!exercise.bodyweight;
-  const showBwToggle = bodyweight || looksBodyweight(exercise.name);
 
   const allSessions = Store.getSessionsFor(exerciseId);
   const todaySession = allSessions.find((s) => s.date === todayISO()) || null;
@@ -231,23 +231,6 @@ function renderLogEntry(exerciseId) {
       </div>
     `)
   );
-
-  if (showBwToggle) {
-    const bwRow = el(`
-      <label class="bw-toggle">
-        <input type="checkbox" ${bodyweight ? 'checked' : ''} />
-        <span class="bw-toggle-text">
-          <span class="bw-toggle-title">Bodyweight exercise</span>
-          <span class="bw-toggle-sub">Weight is optional — leave it blank for a plain bodyweight set</span>
-        </span>
-      </label>
-    `);
-    bwRow.querySelector('input').addEventListener('change', (e) => {
-      Store.setBodyweight(exerciseId, e.target.checked);
-      render(); // relabel the weight fields + re-seed for the new mode
-    });
-    content.appendChild(bwRow);
-  }
 
   content.appendChild(el(`<p class="section-label">Today's sets</p>`));
 
