@@ -5,3 +5,8 @@ Thumbs.db
 .vscode/
 .idea/
 .claude/
+# ...except the committed "run" harness skill (its screenshots stay local)
+!.claude/
+!.claude/skills/
+!.claude/skills/**
+.claude/skills/run-iron-log/shots/
