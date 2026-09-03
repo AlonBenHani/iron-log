@@ -17,6 +17,9 @@ const PRESET_EXERCISES = [
   'Dumbbell Shoulder Press',
 ];
 
+// Presets that are logged at bodyweight by default (weight optional).
+const BODYWEIGHT_PRESETS = new Set(['Pull-up']);
+
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -41,7 +44,12 @@ function loadData() {
     }
   }
   const seeded = {
-    exercises: PRESET_EXERCISES.map((name) => ({ id: uid(), name, isPreset: true })),
+    exercises: PRESET_EXERCISES.map((name) => ({
+      id: uid(),
+      name,
+      isPreset: true,
+      ...(BODYWEIGHT_PRESETS.has(name) ? { bodyweight: true } : {}),
+    })),
     sessions: [],
   };
   saveData(seeded);
@@ -71,6 +79,7 @@ const Store = {
     );
     if (existing) return existing;
     const ex = { id: uid(), name: trimmed, isPreset: false };
+    if (looksBodyweight(trimmed)) ex.bodyweight = true;
     this.data.exercises.push(ex);
     this.save();
     return ex;
@@ -78,6 +87,14 @@ const Store = {
 
   getExercise(id) {
     return this.data.exercises.find((e) => e.id === id) || null;
+  },
+
+  setBodyweight(id, on) {
+    const ex = this.getExercise(id);
+    if (!ex) return;
+    if (on) ex.bodyweight = true;
+    else delete ex.bodyweight;
+    this.save();
   },
 
   deleteExercise(id) {
@@ -98,9 +115,13 @@ const Store = {
   },
 
   logSession(exerciseId, sets, feeling, note) {
+    // Bodyweight exercises accept a blank/zero weight (stored as 0); everything
+    // else still needs a real positive weight so a mis-typed field can't slip
+    // through as 0kg.
+    const bw = !!(this.getExercise(exerciseId) || {}).bodyweight;
     const cleanSets = sets
-      .map((s) => ({ weight: Number(s.weight), reps: Number(s.reps) }))
-      .filter((s) => s.weight > 0 && s.reps > 0);
+      .map((s) => ({ weight: bw ? Number(s.weight) || 0 : Number(s.weight), reps: Number(s.reps) }))
+      .filter((s) => s.reps > 0 && s.weight >= 0 && !Number.isNaN(s.weight) && (bw || s.weight > 0));
     if (!cleanSets.length) return null;
 
     const date = todayISO();
@@ -130,22 +151,42 @@ const Store = {
     return Math.max(...session.sets.map((s) => s.weight));
   },
 
+  topSetReps(session) {
+    return Math.max(...session.sets.map((s) => s.reps));
+  },
+
   avgWeight(session) {
     const sum = session.sets.reduce((acc, s) => acc + s.weight, 0);
     return sum / session.sets.length;
   },
 
-  // { maxWeight, sinceDate, isStuck, stuckDays } or null if no sessions
+  avgReps(session) {
+    const sum = session.sets.reduce((acc, s) => acc + s.reps, 0);
+    return sum / session.sets.length;
+  },
+
+  // { metric, best, bestUnit, maxWeight, maxReps, sinceDate, isStuck, stuckDays,
+  //   lastSession, isPR, sessionCount } or null if no sessions.
+  // A bodyweight exercise that has never carried added weight is scored in
+  // reps ('reps' metric); everything else is scored in kilos ('weight').
   getStats(exerciseId) {
     const sessions = this.getSessionsFor(exerciseId);
     if (!sessions.length) return null;
 
-    let maxWeight = -Infinity;
+    const exercise = this.getExercise(exerciseId);
+    const repsMode =
+      !!(exercise && exercise.bodyweight) &&
+      !sessions.some((s) => this.topSetWeight(s) > 0);
+    const metricOf = repsMode
+      ? (s) => this.topSetReps(s)
+      : (s) => this.topSetWeight(s);
+
+    let best = -Infinity;
     let sinceDate = sessions[0].date;
     for (const s of sessions) {
-      const top = this.topSetWeight(s);
-      if (top > maxWeight) {
-        maxWeight = top;
+      const v = metricOf(s);
+      if (v > best) {
+        best = v;
         sinceDate = s.date;
       }
     }
@@ -155,10 +196,14 @@ const Store = {
     const isStuck = stuckDays >= 30;
 
     const last = sessions[sessions.length - 1];
-    const isPR = this.topSetWeight(last) === maxWeight && last.date === sinceDate;
+    const isPR = metricOf(last) === best && last.date === sinceDate;
 
     return {
-      maxWeight,
+      metric: repsMode ? 'reps' : 'weight',
+      best,
+      bestUnit: repsMode ? 'reps' : 'kg',
+      maxWeight: repsMode ? 0 : best,
+      maxReps: repsMode ? best : Math.max(...sessions.map((s) => this.topSetReps(s))),
       sinceDate,
       isStuck,
       stuckDays,
@@ -198,6 +243,11 @@ const Store = {
   recentTopWeights(exerciseId, n) {
     const sessions = this.getSessionsFor(exerciseId);
     return sessions.slice(-n).map((s) => this.topSetWeight(s));
+  },
+
+  recentTopReps(exerciseId, n) {
+    const sessions = this.getSessionsFor(exerciseId);
+    return sessions.slice(-n).map((s) => this.topSetReps(s));
   },
 };
 

@@ -145,7 +145,11 @@ function exerciseCard({ exercise, stats, onClick, onDelete }) {
     });
     card.appendChild(delBtn);
   } else {
-    const vals = hasStats ? Store.recentTopWeights(exercise.id, 7) : [];
+    const vals = hasStats
+      ? stats.metric === 'reps'
+        ? Store.recentTopReps(exercise.id, 7)
+        : Store.recentTopWeights(exercise.id, 7)
+      : [];
     if (vals.length > 1) {
       const canvas = card.querySelector('canvas');
       requestAnimationFrame(() => {

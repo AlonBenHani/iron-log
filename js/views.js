@@ -211,6 +211,9 @@ function renderLogEntry(exerciseId) {
 
   const content = el(`<div class="content"></div>`);
 
+  const bodyweight = !!exercise.bodyweight;
+  const showBwToggle = bodyweight || looksBodyweight(exercise.name);
+
   const allSessions = Store.getSessionsFor(exerciseId);
   const todaySession = allSessions.find((s) => s.date === todayISO()) || null;
   const priorSession = [...allSessions].reverse().find((s) => s.date !== todayISO()) || null;
@@ -229,6 +232,23 @@ function renderLogEntry(exerciseId) {
     `)
   );
 
+  if (showBwToggle) {
+    const bwRow = el(`
+      <label class="bw-toggle">
+        <input type="checkbox" ${bodyweight ? 'checked' : ''} />
+        <span class="bw-toggle-text">
+          <span class="bw-toggle-title">Bodyweight exercise</span>
+          <span class="bw-toggle-sub">Weight is optional — leave it blank for a plain bodyweight set</span>
+        </span>
+      </label>
+    `);
+    bwRow.querySelector('input').addEventListener('change', (e) => {
+      Store.setBodyweight(exerciseId, e.target.checked);
+      render(); // relabel the weight fields + re-seed for the new mode
+    });
+    content.appendChild(bwRow);
+  }
+
   content.appendChild(el(`<p class="section-label">Today's sets</p>`));
 
   const setsWrap = el(`<div style="display:flex;flex-direction:column;gap:10px;"></div>`);
@@ -242,8 +262,10 @@ function renderLogEntry(exerciseId) {
       <div class="set-row">
         <div class="set-index">${idx}</div>
         <div class="set-field">
-          <label>Weight (kg)</label>
-          <input type="number" inputmode="decimal" step="0.5" min="0" class="w-input" value="${prefillWeight}" />
+          <label>${bodyweight ? 'Added weight (kg)' : 'Weight (kg)'}</label>
+          <input type="number" inputmode="decimal" step="0.5" min="0" class="w-input" value="${prefillWeight}"${
+            bodyweight ? ' placeholder="0"' : ''
+          } />
         </div>
         <div class="set-field">
           <label>Reps</label>
@@ -285,14 +307,16 @@ function renderLogEntry(exerciseId) {
     });
   }
 
-  const seedWeight = lastSession ? fmtWeight(Store.topSetWeight(lastSession)) : '';
+  // On a bodyweight exercise a 0kg set shows as an empty field, not "0".
+  const seedW = (w) => (bodyweight && !(w > 0) ? '' : fmtWeight(w));
+  const seedWeight = lastSession ? seedW(Store.topSetWeight(lastSession)) : '';
   if (todaySession) {
     // Editing what's already saved for today: show exactly those sets, not a re-seeded guess.
-    todaySession.sets.forEach((s) => addSetRow(fmtWeight(s.weight), s.reps));
+    todaySession.sets.forEach((s) => addSetRow(seedW(s.weight), s.reps));
   } else {
     for (let i = 0; i < 3; i++) {
       const priorSet = lastSession && lastSession.sets[i];
-      addSetRow(priorSet ? fmtWeight(priorSet.weight) : seedWeight, priorSet ? priorSet.reps : '');
+      addSetRow(priorSet ? seedW(priorSet.weight) : seedWeight, priorSet ? priorSet.reps : '');
     }
   }
 
@@ -341,7 +365,7 @@ function renderLogEntry(exerciseId) {
     }));
     const saved = Store.logSession(exerciseId, sets, selectedFeeling, noteInput.value);
     if (saved) navigate('/today');
-    else alert('Enter at least one set with weight and reps.');
+    else alert(bodyweight ? 'Enter reps for at least one set.' : 'Enter at least one set with weight and reps.');
   }
   saveBtn.addEventListener('click', () => {
     // A session for this exercise already exists for today — logSession would
@@ -387,10 +411,13 @@ function renderProgressDetail(exerciseId) {
     return wrap;
   }
 
+  const repsMode = stats.metric === 'reps';
   content.appendChild(
     el(`
       <div class="card">
-        <div class="big-stat">${fmtWeight(stats.maxWeight)}<span class="big-stat-unit">kg</span></div>
+        <div class="big-stat">${
+          repsMode ? stats.maxReps : fmtWeight(stats.maxWeight)
+        }<span class="big-stat-unit">${stats.bestUnit}</span></div>
         <div class="big-stat-label">Current best top set</div>
       </div>
     `)
@@ -406,11 +433,12 @@ function renderProgressDetail(exerciseId) {
   );
 
   if (stats.isStuck) {
+    const stuckAt = repsMode ? `${stats.maxReps} reps` : `${fmtWeight(stats.maxWeight)}kg`;
     content.appendChild(
       el(`
         <div class="stuck-banner">
           <span>⚠️</span>
-          <span>Stuck at ${fmtWeight(stats.maxWeight)}kg for ${stats.stuckDays} days. Consider a small jump or a deload.</span>
+          <span>Stuck at ${stuckAt} for ${stats.stuckDays} days. Consider a small jump or a deload.</span>
         </div>
       `)
     );
@@ -419,14 +447,17 @@ function renderProgressDetail(exerciseId) {
   const chartCard = el(`
     <div class="card">
       <p class="card-title">Progress</p>
-      <p class="card-subtitle">Average set weight per session over time.</p>
+      <p class="card-subtitle">Average ${repsMode ? 'reps' : 'set weight'} per session over time.</p>
       <div class="chart-wrap"><canvas style="width:100%;height:100%;"></canvas></div>
     </div>
   `);
   content.appendChild(chartCard);
   requestAnimationFrame(() => {
     const canvas = chartCard.querySelector('canvas');
-    const points = sessions.map((s) => ({ date: s.date, weight: Store.avgWeight(s) }));
+    const points = sessions.map((s) => ({
+      date: s.date,
+      weight: repsMode ? Store.avgReps(s) : Store.avgWeight(s),
+    }));
     drawLineChart(canvas, points);
   });
 
