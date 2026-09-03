@@ -17,9 +17,6 @@ const PRESET_EXERCISES = [
   'Dumbbell Shoulder Press',
 ];
 
-// Presets that are logged at bodyweight by default (weight optional).
-const BODYWEIGHT_PRESETS = new Set(['Pull-up']);
-
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -44,12 +41,7 @@ function loadData() {
     }
   }
   const seeded = {
-    exercises: PRESET_EXERCISES.map((name) => ({
-      id: uid(),
-      name,
-      isPreset: true,
-      ...(BODYWEIGHT_PRESETS.has(name) ? { bodyweight: true } : {}),
-    })),
+    exercises: PRESET_EXERCISES.map((name) => ({ id: uid(), name, isPreset: true })),
     sessions: [],
   };
   saveData(seeded);

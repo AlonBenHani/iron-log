@@ -10,12 +10,11 @@ function fmtWeight(w) {
   return Number.isInteger(w) ? String(w) : w.toFixed(1);
 }
 
-// Movements normally done at bodyweight — used to surface the "Bodyweight"
-// toggle only where it makes sense, and to default new exercises to it.
+// An exercise counts as bodyweight when its name says so — e.g. "Bodyweight
+// Squat", "Pull-up (bodyweight)". This both defaults new exercises to the
+// bodyweight mode and surfaces the toggle so it can be turned off.
 function looksBodyweight(name) {
-  return /pull[- ]?up|chin[- ]?up|\bdips?\b|push[- ]?up|\bplank|muscle[- ]?up|pistol|sit[- ]?up|leg raise|hanging|inverted row|hyperextension|nordic|air squat|burpee/i.test(
-    name
-  );
+  return /body[\s-]?weight/i.test(name);
 }
 
 // One set as text: a zero-weight set is bodyweight ("BW×10"), else "40kg×10".
