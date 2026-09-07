@@ -92,9 +92,9 @@ function headerWithBack(title, backHash) {
   const header = el(`
     <div class="header">
       <div class="header-row">
-        <button class="back-btn" aria-label="Back"><span class="back-btn-glyph">‹</span></button>
+        <button class="back-btn" aria-label="Back"><svg class="back-btn-glyph" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 5 8 12 15 19"></polyline></svg></button>
         <h1 class="page-title">${escapeHtml(title)}</h1>
-        <div style="width:38px"></div>
+        <div style="width:40px"></div>
       </div>
     </div>
   `);
