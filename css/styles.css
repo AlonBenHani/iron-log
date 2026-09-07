@@ -825,6 +825,13 @@ button, input, textarea {
   cursor: pointer;
 }
 
+/* Text field inside a modal sheet — sits on the panel, so it needs the
+   darker fill to read as an input rather than blend into the panel. */
+.modal-input {
+  background: var(--surface-2);
+  margin-bottom: 20px;
+}
+
 /* ---------- rest timer tile (Home, square) ---------- */
 
 .timer-tile {

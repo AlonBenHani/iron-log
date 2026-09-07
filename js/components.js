@@ -154,10 +154,16 @@ function showModal(contentEl, onClose) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) close();
   });
+  function onKey(e) {
+    if (e.key === 'Escape') close();
+  }
   function close() {
+    if (!overlay.isConnected) return;
     overlay.remove();
+    document.removeEventListener('keydown', onKey);
     if (onClose) onClose();
   }
+  document.addEventListener('keydown', onKey);
   document.body.appendChild(overlay);
   return { close };
 }
@@ -186,6 +192,81 @@ function showConfirmModal({ title, message, confirmLabel = 'Confirm', dismissLab
     close();
     if (onConfirm) onConfirm();
   });
+  return { close };
+}
+
+// A styled single-button notice — the in-app stand-in for window.alert().
+function showAlertModal({ title, message, dismissLabel = 'Got it' }) {
+  const panel = el(`
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">${escapeHtml(title)}</h2>
+        <button class="modal-close" aria-label="Close">×</button>
+      </div>
+      ${message ? `<div class="modal-body">${escapeHtml(message)}</div>` : ''}
+      <div class="modal-actions">
+        <button class="primary-btn modal-dismiss">${escapeHtml(dismissLabel)}</button>
+      </div>
+    </div>
+  `);
+  const { close } = showModal(panel);
+  panel.querySelector('.modal-close').addEventListener('click', close);
+  panel.querySelector('.modal-dismiss').addEventListener('click', close);
+  return { close };
+}
+
+// A styled text-input bottom sheet — the in-app stand-in for window.prompt().
+// onConfirm(value) runs only with a non-empty trimmed value; the confirm button
+// stays disabled until then, and Enter in the field submits.
+function showPromptModal({
+  title,
+  message,
+  placeholder = '',
+  initialValue = '',
+  confirmLabel = 'Add',
+  dismissLabel = 'Cancel',
+  onConfirm,
+}) {
+  const panel = el(`
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">${escapeHtml(title)}</h2>
+        <button class="modal-close" aria-label="Close">×</button>
+      </div>
+      ${message ? `<div class="modal-body">${escapeHtml(message)}</div>` : ''}
+      <input class="text-input modal-input" type="text" placeholder="${escapeHtml(
+        placeholder
+      )}" value="${escapeHtml(initialValue)}" />
+      <div class="modal-actions">
+        <button class="primary-btn modal-confirm">${escapeHtml(confirmLabel)}</button>
+        <button class="link-btn modal-dismiss">${escapeHtml(dismissLabel)}</button>
+      </div>
+    </div>
+  `);
+  const { close } = showModal(panel);
+  const input = panel.querySelector('.modal-input');
+  const confirmBtn = panel.querySelector('.modal-confirm');
+  const sync = () => {
+    confirmBtn.disabled = !input.value.trim();
+  };
+  const submit = () => {
+    const v = input.value.trim();
+    if (!v) return;
+    close();
+    if (onConfirm) onConfirm(v);
+  };
+  sync();
+  input.addEventListener('input', sync);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submit();
+    }
+  });
+  confirmBtn.addEventListener('click', submit);
+  panel.querySelector('.modal-close').addEventListener('click', close);
+  panel.querySelector('.modal-dismiss').addEventListener('click', close);
+  requestAnimationFrame(() => input.focus());
   return { close };
 }
 
@@ -222,10 +303,16 @@ function openExerciseInfoModal(exercise, stats) {
     navigate('/log/' + exercise.id);
   });
   panel.querySelector('.modal-delete-btn').addEventListener('click', () => {
-    if (confirm(`Delete "${exercise.name}"? This also removes its logged history.`)) {
-      Store.deleteExercise(exercise.id);
-      close();
-      render();
-    }
+    showConfirmModal({
+      title: `Delete ${exercise.name}?`,
+      message: 'This removes the exercise and every session logged for it. This cannot be undone.',
+      confirmLabel: 'Delete',
+      dismissLabel: 'Keep it',
+      onConfirm: () => {
+        Store.deleteExercise(exercise.id);
+        close();
+        render();
+      },
+    });
   });
 }

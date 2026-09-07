@@ -150,11 +150,16 @@ function renderPicker(mode) {
   if (isLog) {
     const addBtn = el(`<button class="link-btn">+ Add a new exercise</button>`);
     addBtn.addEventListener('click', () => {
-      const name = prompt('Exercise name');
-      if (name && name.trim()) {
-        const ex = Store.addExercise(name);
-        navigate('/log/' + ex.id);
-      }
+      showPromptModal({
+        title: 'New exercise',
+        message: 'Name it — include the word "bodyweight" to track it by reps only.',
+        placeholder: 'e.g. Incline Bench Press',
+        confirmLabel: 'Create',
+        onConfirm: (name) => {
+          const ex = Store.addExercise(name);
+          navigate('/log/' + ex.id);
+        },
+      });
     });
     searchWrap.appendChild(addBtn);
   }
@@ -353,8 +358,16 @@ function renderLogEntry(exerciseId) {
       return { weight: w ? w.value : 0, reps: row.querySelector('.r-input').value };
     });
     const saved = Store.logSession(exerciseId, sets, selectedFeeling, noteInput.value);
-    if (saved) navigate('/today');
-    else alert(bodyweight ? 'Enter reps for at least one set.' : 'Enter at least one set with weight and reps.');
+    if (saved) {
+      navigate('/today');
+    } else {
+      showAlertModal({
+        title: 'Nothing to save yet',
+        message: bodyweight
+          ? 'Enter reps for at least one set.'
+          : 'Enter at least one set with a weight and reps.',
+      });
+    }
   }
   saveBtn.addEventListener('click', () => {
     // A session for this exercise already exists for today — logSession would
