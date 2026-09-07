@@ -102,10 +102,8 @@ function headerWithBack(title, backHash) {
   return header;
 }
 
-function exerciseCard({ exercise, stats, onClick }) {
+function exerciseCard({ exercise, stats, onClick, loggedToday = false }) {
   const hasStats = !!stats;
-  // Whole card goes green when this exercise already has a session logged today.
-  const loggedToday = hasStats && stats.lastSession.date === todayISO();
   const card = el(`
     <div class="exercise-card${loggedToday ? ' logged-today' : ''}" role="button" tabindex="0">
       <div class="exercise-icon">${escapeHtml(iconFor(exercise.name))}</div>

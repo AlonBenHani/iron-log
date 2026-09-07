@@ -172,12 +172,23 @@ function renderPicker(mode) {
       list.appendChild(el(`<div class="empty-state">No matching exercises.</div>`));
       return;
     }
-    exercises.forEach((ex) => {
+    const rows = exercises.map((ex) => {
       const stats = Store.getStats(ex.id);
+      // Only the Log picker flags what's already been done today, and sinks it.
+      const loggedToday = isLog && !!stats && stats.lastSession.date === todayISO();
+      return { ex, stats, loggedToday };
+    });
+    if (isLog) {
+      // Stable sort: exercises still to do stay in their normal order at the
+      // top; anything logged today drops below them.
+      rows.sort((a, b) => (a.loggedToday === b.loggedToday ? 0 : a.loggedToday ? 1 : -1));
+    }
+    rows.forEach(({ ex, stats, loggedToday }) => {
       list.appendChild(
         exerciseCard({
           exercise: ex,
           stats,
+          loggedToday,
           onClick: () => navigate(`/${mode}/${ex.id}`),
         })
       );
