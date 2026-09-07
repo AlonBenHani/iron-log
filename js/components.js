@@ -292,7 +292,7 @@ function openExerciseInfoModal(exercise, stats) {
       </div>
       <div class="modal-actions">
         <button class="link-btn modal-edit">Edit this entry</button>
-        <button class="modal-delete-btn">Delete exercise</button>
+        <button class="modal-delete-btn">Remove today's entry</button>
       </div>
     </div>
   `);
@@ -304,12 +304,12 @@ function openExerciseInfoModal(exercise, stats) {
   });
   panel.querySelector('.modal-delete-btn').addEventListener('click', () => {
     showConfirmModal({
-      title: `Delete ${exercise.name}?`,
-      message: 'This removes the exercise and every session logged for it. This cannot be undone.',
-      confirmLabel: 'Delete',
+      title: `Remove ${exercise.name} from today?`,
+      message: `This deletes today's logged sets for ${exercise.name}. The exercise and its earlier history stay — delete the whole exercise from its log screen.`,
+      confirmLabel: 'Remove',
       dismissLabel: 'Keep it',
       onConfirm: () => {
-        Store.deleteExercise(exercise.id);
+        Store.deleteSession(s.id);
         close();
         render();
       },

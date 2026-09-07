@@ -87,6 +87,13 @@ const Store = {
     this.save();
   },
 
+  // Remove a single logged session, leaving the exercise and its other
+  // history intact.
+  deleteSession(id) {
+    this.data.sessions = this.data.sessions.filter((s) => s.id !== id);
+    this.save();
+  },
+
   getSessionsFor(exerciseId) {
     return this.data.sessions
       .filter((s) => s.exerciseId === exerciseId)
