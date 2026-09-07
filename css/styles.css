@@ -320,8 +320,12 @@ button, input, textarea {
   border-bottom: none;
 }
 
-.exercise-card.stuck { border-left-color: var(--amber); }
-.exercise-card.pr { border-left-color: var(--green); }
+/* Logged today: whole card tinted green. */
+.exercise-card.logged-today {
+  background: var(--green-dim);
+  border-left-color: var(--green);
+}
+.exercise-card.logged-today .exercise-name { color: var(--green); }
 
 .exercise-icon {
   width: 42px;
@@ -350,17 +354,6 @@ button, input, textarea {
   font-size: 15px;
   font-weight: 700;
 }
-
-.exercise-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 99px;
-  white-space: nowrap;
-}
-
-.exercise-badge.pr { background: var(--green-dim); color: var(--green); }
-.exercise-badge.stuck { background: var(--amber-dim); color: var(--amber); }
 
 .exercise-sub {
   font-size: 13px;

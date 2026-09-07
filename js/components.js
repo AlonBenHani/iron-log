@@ -104,20 +104,14 @@ function headerWithBack(title, backHash) {
 
 function exerciseCard({ exercise, stats, onClick, onDelete }) {
   const hasStats = !!stats;
-  const badgeCls = hasStats && stats.isStuck ? 'stuck' : hasStats && stats.isPR ? 'pr' : '';
+  // Whole card goes green when this exercise already has a session logged today.
+  const loggedToday = hasStats && stats.lastSession.date === todayISO();
   const card = el(`
-    <div class="exercise-card ${badgeCls}" role="button" tabindex="0">
+    <div class="exercise-card${loggedToday ? ' logged-today' : ''}" role="button" tabindex="0">
       <div class="exercise-icon">${escapeHtml(iconFor(exercise.name))}</div>
       <div class="exercise-main">
         <div class="exercise-name-row">
           <span class="exercise-name">${escapeHtml(exercise.name)}</span>
-          ${
-            hasStats && stats.isStuck
-              ? `<span class="exercise-badge stuck">${stats.stuckDays}d stuck</span>`
-              : hasStats && stats.isPR
-              ? `<span class="exercise-badge pr">PR</span>`
-              : ''
-          }
         </div>
         ${
           hasStats
@@ -153,7 +147,7 @@ function exerciseCard({ exercise, stats, onClick, onDelete }) {
     if (vals.length > 1) {
       const canvas = card.querySelector('canvas');
       requestAnimationFrame(() => {
-        drawSparkline(canvas, vals, { color: stats.isStuck ? '#F5A24B' : '#4ADE80' });
+        drawSparkline(canvas, vals, { color: '#4ADE80' });
       });
     } else {
       // A single bar would just fill the whole canvas and look like a plain
