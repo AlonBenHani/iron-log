@@ -316,3 +316,74 @@ function openExerciseInfoModal(exercise, stats) {
     });
   });
 }
+
+// ---------- Confetti (new-PR celebration) ----------
+
+// A one-shot canvas burst pinned to the viewport. Lives on <body>, so it
+// keeps playing across the route change that a save triggers, then removes
+// itself. No-op when the user prefers reduced motion.
+function burstConfetti() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const canvas = el('<canvas class="confetti-canvas" aria-hidden="true"></canvas>');
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  const colors = ['#4ADE80', '#F5A24B', '#F87171', '#60A5FA', '#FBBF24', '#F5F6F8'];
+  const originX = W / 2;
+  const originY = H * 0.38;
+  const count = 150;
+  const parts = [];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 4 + Math.random() * 9;
+    parts.push({
+      x: originX,
+      y: originY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3,
+      w: 5 + Math.random() * 6,
+      h: 8 + Math.random() * 8,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.35,
+      color: colors[(Math.random() * colors.length) | 0],
+    });
+  }
+
+  const gravity = 0.22;
+  const drag = 0.99;
+  const start = performance.now();
+  const life = 1900;
+
+  function frame(now) {
+    const t = now - start;
+    ctx.clearRect(0, 0, W, H);
+    const fade = t > life - 500 ? Math.max(0, (life - t) / 500) : 1;
+    for (const p of parts) {
+      p.vx *= drag;
+      p.vy = p.vy * drag + gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = fade;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (t < life) {
+      requestAnimationFrame(frame);
+    } else {
+      canvas.remove();
+    }
+  }
+  requestAnimationFrame(frame);
+}

@@ -224,6 +224,31 @@ const Store = {
     return set;
   },
 
+  // The most recent time any exercise beat its own previous best, as
+  // { name, date, value, unit } — or null if nothing's been beaten yet.
+  // Walks each exercise's history so it survives later non-PR sessions
+  // (unlike getStats().isPR, which only flags a PR set in the last session).
+  latestPR() {
+    let best = null;
+    for (const ex of this.data.exercises) {
+      const sessions = this.getSessionsFor(ex.id);
+      if (sessions.length < 2) continue;
+      const repsMode = !!ex.bodyweight && !sessions.some((s) => this.topSetWeight(s) > 0);
+      const metricOf = repsMode ? (s) => this.topSetReps(s) : (s) => this.topSetWeight(s);
+      let running = metricOf(sessions[0]);
+      for (let i = 1; i < sessions.length; i++) {
+        const v = metricOf(sessions[i]);
+        if (v > running) {
+          if (!best || sessions[i].date >= best.date) {
+            best = { name: ex.name, date: sessions[i].date, value: v, unit: repsMode ? 'reps' : 'kg' };
+          }
+          running = v;
+        }
+      }
+    }
+    return best;
+  },
+
   recentTopWeights(exerciseId, n) {
     const sessions = this.getSessionsFor(exerciseId);
     return sessions.slice(-n).map((s) => this.topSetWeight(s));

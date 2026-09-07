@@ -49,7 +49,15 @@ function renderToday() {
   const withStats = exercises
     .map((ex) => ({ ex, stats: Store.getStats(ex.id) }))
     .filter((x) => x.stats);
-  const prCount = withStats.filter((x) => x.stats.isPR).length;
+  const lastPR = Store.latestPR();
+  const prValue = lastPR
+    ? lastPR.unit === 'reps'
+      ? `${lastPR.value}`
+      : `${fmtWeight(lastPR.value)}<span style="font-size:14px;color:var(--text-muted)">kg</span>`
+    : '—';
+  const prSub = lastPR
+    ? `${escapeHtml(lastPR.name)} · ${fmtDateShort(lastPR.date)}`
+    : 'No PRs yet';
 
   const tileGrid = el(`
     <div class="tile-grid">
@@ -65,9 +73,9 @@ function renderToday() {
         <div class="stat-sub">days this week</div>
       </div>
       <div class="tile stat-tile">
-        <div class="stat-icon-row"><span class="stat-icon">🏆</span> PRs</div>
-        <div class="stat-big">${prCount}</div>
-        <div class="stat-sub">current bests</div>
+        <div class="stat-icon-row"><span class="stat-icon">🏆</span> Latest PR</div>
+        <div class="stat-big">${prValue}</div>
+        <div class="stat-sub">${prSub}</div>
       </div>
     </div>
   `);
@@ -359,6 +367,9 @@ function renderLogEntry(exerciseId) {
     });
     const saved = Store.logSession(exerciseId, sets, selectedFeeling, noteInput.value);
     if (saved) {
+      // getStats().isPR is true only when the session just saved is the new best.
+      const after = Store.getStats(exerciseId);
+      if (after && after.isPR) burstConfetti();
       navigate('/today');
     } else {
       showAlertModal({
