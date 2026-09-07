@@ -127,6 +127,7 @@ function renderTodayLifts() {
         exerciseCard({
           exercise: ex,
           stats,
+          showLastSets: true,
           onClick: () => openExerciseInfoModal(ex, stats),
         })
       );

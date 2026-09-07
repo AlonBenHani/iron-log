@@ -102,8 +102,16 @@ function headerWithBack(title, backHash) {
   return header;
 }
 
-function exerciseCard({ exercise, stats, onClick, loggedToday = false }) {
+// showLastSets: render the last session's sets under the name. The Log and
+// Progress pickers keep their rows clean (you tap through for the detail);
+// Today's Lifts opts in so the list still reads as "what I did today".
+function exerciseCard({ exercise, stats, onClick, loggedToday = false, showLastSets = false }) {
   const hasStats = !!stats;
+  const subLine = !showLastSets
+    ? ''
+    : hasStats
+    ? `<div class="exercise-sub">${fmtSetsInline(stats.lastSession.sets)}</div>`
+    : `<div class="exercise-empty">No sessions yet</div>`;
   const card = el(`
     <div class="exercise-card${loggedToday ? ' logged-today' : ''}" role="button" tabindex="0">
       <div class="exercise-icon">${escapeHtml(iconFor(exercise.name))}</div>
@@ -111,11 +119,7 @@ function exerciseCard({ exercise, stats, onClick, loggedToday = false }) {
         <div class="exercise-name-row">
           <span class="exercise-name">${escapeHtml(exercise.name)}</span>
         </div>
-        ${
-          hasStats
-            ? `<div class="exercise-sub">${fmtSetsInline(stats.lastSession.sets)}</div>`
-            : `<div class="exercise-empty">No sessions yet</div>`
-        }
+        ${subLine}
       </div>
       <canvas class="spark-canvas"></canvas>
     </div>
