@@ -102,7 +102,7 @@ function headerWithBack(title, backHash) {
   return header;
 }
 
-function exerciseCard({ exercise, stats, onClick, onDelete }) {
+function exerciseCard({ exercise, stats, onClick }) {
   const hasStats = !!stats;
   // Whole card goes green when this exercise already has a session logged today.
   const loggedToday = hasStats && stats.lastSession.date === todayISO();
@@ -119,7 +119,7 @@ function exerciseCard({ exercise, stats, onClick, onDelete }) {
             : `<div class="exercise-empty">No sessions yet</div>`
         }
       </div>
-      ${onDelete ? '' : '<canvas class="spark-canvas"></canvas>'}
+      <canvas class="spark-canvas"></canvas>
     </div>
   `);
   card.addEventListener('click', onClick);
@@ -130,30 +130,20 @@ function exerciseCard({ exercise, stats, onClick, onDelete }) {
     }
   });
 
-  if (onDelete) {
-    const delBtn = el(`<button class="exercise-delete">×</button>`);
-    delBtn.setAttribute('aria-label', `Delete ${exercise.name}`);
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      onDelete();
+  const vals = hasStats
+    ? stats.metric === 'reps'
+      ? Store.recentTopReps(exercise.id, 7)
+      : Store.recentTopWeights(exercise.id, 7)
+    : [];
+  if (vals.length > 1) {
+    const canvas = card.querySelector('canvas');
+    requestAnimationFrame(() => {
+      drawSparkline(canvas, vals, { color: '#4ADE80' });
     });
-    card.appendChild(delBtn);
   } else {
-    const vals = hasStats
-      ? stats.metric === 'reps'
-        ? Store.recentTopReps(exercise.id, 7)
-        : Store.recentTopWeights(exercise.id, 7)
-      : [];
-    if (vals.length > 1) {
-      const canvas = card.querySelector('canvas');
-      requestAnimationFrame(() => {
-        drawSparkline(canvas, vals, { color: '#4ADE80' });
-      });
-    } else {
-      // A single bar would just fill the whole canvas and look like a plain
-      // block rather than a trend — not useful until there's real history.
-      card.querySelector('canvas').remove();
-    }
+    // A single bar would just fill the whole canvas and look like a plain
+    // block rather than a trend — not useful until there's real history.
+    card.querySelector('canvas').remove();
   }
   return card;
 }

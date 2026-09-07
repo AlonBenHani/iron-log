@@ -179,14 +179,6 @@ function renderPicker(mode) {
           exercise: ex,
           stats,
           onClick: () => navigate(`/${mode}/${ex.id}`),
-          onDelete: isLog
-            ? () => {
-                if (confirm(`Delete "${ex.name}"? This also removes its logged history.`)) {
-                  Store.deleteExercise(ex.id);
-                  renderList(searchInput.value);
-                }
-              }
-            : undefined,
         })
       );
     });
@@ -369,6 +361,21 @@ function renderLogEntry(exerciseId) {
     }
   });
   content.appendChild(saveBtn);
+
+  const deleteBtn = el(`<button class="danger-btn">Delete this exercise</button>`);
+  deleteBtn.addEventListener('click', () => {
+    showConfirmModal({
+      title: `Delete ${exercise.name}?`,
+      message: 'This removes the exercise and every session logged for it. This cannot be undone.',
+      confirmLabel: 'Delete',
+      dismissLabel: 'Keep it',
+      onConfirm: () => {
+        Store.deleteExercise(exerciseId);
+        navigate('/log');
+      },
+    });
+  });
+  content.appendChild(deleteBtn);
 
   wrap.appendChild(content);
   return wrap;
