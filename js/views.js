@@ -244,12 +244,14 @@ function renderLogEntry(exerciseId) {
     const row = el(`
       <div class="set-row">
         <div class="set-index">${idx}</div>
-        <div class="set-field">
-          <label>${bodyweight ? 'Added weight (kg)' : 'Weight (kg)'}</label>
-          <input type="number" inputmode="decimal" step="0.5" min="0" class="w-input" value="${prefillWeight}"${
-            bodyweight ? ' placeholder="0"' : ''
-          } />
-        </div>
+        ${
+          bodyweight
+            ? ''
+            : `<div class="set-field">
+          <label>Weight (kg)</label>
+          <input type="number" inputmode="decimal" step="0.5" min="0" class="w-input" value="${prefillWeight}" />
+        </div>`
+        }
         <div class="set-field">
           <label>Reps</label>
           <input type="number" inputmode="numeric" min="0" class="r-input" value="${prefillReps}" />
@@ -271,14 +273,14 @@ function renderLogEntry(exerciseId) {
       if (row === setsWrap.firstElementChild) {
         [...setsWrap.querySelectorAll('.set-row')].forEach((r) => {
           if (r === row || r.dataset.dirty === 'true') return;
-          r.querySelector('.w-input').value = wInput.value;
+          if (wInput) r.querySelector('.w-input').value = wInput.value;
           r.querySelector('.r-input').value = rInput.value;
         });
       } else {
         row.dataset.dirty = 'true';
       }
     }
-    wInput.addEventListener('input', onFieldInput);
+    if (wInput) wInput.addEventListener('input', onFieldInput);
     rInput.addEventListener('input', onFieldInput);
 
     setsWrap.appendChild(row);
@@ -306,7 +308,8 @@ function renderLogEntry(exerciseId) {
   const addSetBtn = el(`<button class="add-set-btn">+ Add another set</button>`);
   addSetBtn.addEventListener('click', () => {
     const first = setsWrap.firstElementChild;
-    const w = first ? first.querySelector('.w-input').value || seedWeight : seedWeight;
+    const firstW = first && first.querySelector('.w-input');
+    const w = firstW ? firstW.value || seedWeight : seedWeight;
     const r = first ? first.querySelector('.r-input').value : '';
     addSetRow(w, r);
   });
@@ -342,10 +345,10 @@ function renderLogEntry(exerciseId) {
 
   const saveBtn = el(`<button class="primary-btn" style="margin-top:6px;">Save exercise</button>`);
   function doSave() {
-    const sets = [...setsWrap.querySelectorAll('.set-row')].map((row) => ({
-      weight: row.querySelector('.w-input').value,
-      reps: row.querySelector('.r-input').value,
-    }));
+    const sets = [...setsWrap.querySelectorAll('.set-row')].map((row) => {
+      const w = row.querySelector('.w-input');
+      return { weight: w ? w.value : 0, reps: row.querySelector('.r-input').value };
+    });
     const saved = Store.logSession(exerciseId, sets, selectedFeeling, noteInput.value);
     if (saved) navigate('/today');
     else alert(bodyweight ? 'Enter reps for at least one set.' : 'Enter at least one set with weight and reps.');

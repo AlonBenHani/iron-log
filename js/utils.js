@@ -11,8 +11,8 @@ function fmtWeight(w) {
 }
 
 // An exercise counts as bodyweight when its name says so — e.g. "Bodyweight
-// Squat", "Pull-up (bodyweight)". This both defaults new exercises to the
-// bodyweight mode and surfaces the toggle so it can be turned off.
+// Squat", "Pull-up (bodyweight)". Decided once from the name when the exercise
+// is created; a bodyweight exercise logs reps only, with no weight field.
 function looksBodyweight(name) {
   return /body[\s-]?weight/i.test(name);
 }
